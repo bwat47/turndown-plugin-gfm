@@ -58,6 +58,9 @@
   "peerDependencies": {
     "turndown": "^7.0.0"
   },
+  "volta": {
+    "node": "22.17.1"
+  },
   "publishConfig": {
     "access": "public"
   }
