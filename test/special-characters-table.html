@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Special Characters Table Test</title>
+</head>
+<body>
+    <h1>Table with Special Characters Test</h1>
+    
+    <!-- Table with characters that could break markdown -->
+    <table>
+        <tr>
+            <th>Character</th>
+            <th>Description</th>
+            <th>Example</th>
+        </tr>
+        <tr>
+            <td>Pipe |</td>
+            <td>Should be escaped</td>
+            <td>A | B | C</td>
+        </tr>
+        <tr>
+            <td>Backslash \</td>
+            <td>Path separator</td>
+            <td>C:\Users\Name\File.txt</td>
+        </tr>
+        <tr>
+            <td>Quotes</td>
+            <td>"Double" and 'Single'</td>
+            <td>"Hello 'world'" said John</td>
+        </tr>
+        <tr>
+            <td>Asterisks **</td>
+            <td>Markdown formatting</td>
+            <td>**Bold** text *italic* text</td>
+        </tr>
+        <tr>
+            <td>Underscores __</td>
+            <td>More formatting</td>
+            <td>__Bold__ _italic_ text</td>
+        </tr>
+        <tr>
+            <td>Code `backticks`</td>
+            <td>Inline code</td>
+            <td>`console.log('test')`</td>
+        </tr>
+        <tr>
+            <td>Brackets []</td>
+            <td>Link syntax</td>
+            <td>[Link](http://example.com)</td>
+        </tr>
+        <tr>
+            <td>HTML &lt;tags&gt;</td>
+            <td>Should be handled</td>
+            <td>&lt;div&gt;content&lt;/div&gt;</td>
+        </tr>
+    </table>
+</body>
+</html> 

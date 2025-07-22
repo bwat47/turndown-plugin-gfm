@@ -1,0 +1,64 @@
+{
+  "name": "@truto/turndown-plugin-gfm",
+  "description": "Enhanced Turndown plugin for GitHub Flavored Markdown with improved table conversion and performance.",
+  "version": "1.0.0",
+  "type": "module",
+  "author": "Truto <eng@truto.one>",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
+  },
+  "files": [
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "turndown",
+    "turndown-plugin",
+    "html-to-markdown",
+    "html",
+    "markdown",
+    "github-flavored-markdown",
+    "gfm",
+    "table-conversion",
+    "performance"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trutohq/turndown-plugin-gfm.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "dev": "vitest",
+    "prepare": "npm run build",
+    "lint": "eslint src test --ext .js",
+    "lint:fix": "eslint src test --ext .js --fix"
+  },
+  "devDependencies": {
+    "@types/turndown": "^5.0.5",
+    "@vitest/coverage-v8": "3.2.4",
+    "eslint": "9.31.0",
+    "turndown": "7.2.0",
+    "typescript": "^5.8.3",
+    "vite": "7.0.5",
+    "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "turndown": "^7.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
