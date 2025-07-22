@@ -42,21 +42,23 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "dev": "vitest",
-    "prepare": "npm run build",
     "lint": "eslint src test --ext .js",
     "lint:fix": "eslint src test --ext .js --fix"
   },
   "devDependencies": {
-    "@types/turndown": "^5.0.5",
+    "@types/turndown": "5.0.5",
     "@vitest/coverage-v8": "3.2.4",
     "eslint": "9.31.0",
     "turndown": "7.2.0",
-    "typescript": "^5.8.3",
+    "typescript": "5.8.3",
     "vite": "7.0.5",
     "vitest": "3.2.4"
   },
   "peerDependencies": {
     "turndown": "^7.0.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.45.1"
   },
   "volta": {
     "node": "22.17.1"
