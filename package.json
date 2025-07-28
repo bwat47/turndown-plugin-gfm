@@ -1,17 +1,17 @@
 {
   "name": "@truto/turndown-plugin-gfm",
   "description": "Enhanced Turndown plugin for GitHub Flavored Markdown with improved table conversion and performance.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "author": "Truto <eng@truto.one>",
   "main": "./lib/index.js",
   "module": "./lib/index.js",
   "exports": {
     ".": {
+      "types": "./lib/index.d.ts",
       "import": "./lib/index.js",
       "require": "./lib/index.js",
-      "default": "./lib/index.js",
-      "types": "./lib/index.d.ts"
+      "default": "./lib/index.js"
     }
   },
   "files": [
