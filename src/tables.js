@@ -1,4 +1,4 @@
-var rules = {}
+const rules = {}
 
 // Helper function to safely get text content and clean it
 function cleanCellContent(content) {
@@ -33,10 +33,10 @@ function cell(content, node, index) {
   }
   if (index === null) index = 0
   
-  var prefix = ' '
+  let prefix = ' '
   if (index === 0) prefix = '| '
   
-  let cellContent = cleanCellContent(content)
+  const cellContent = cleanCellContent(content)
   
   // Handle colspan by adding extra empty cells
   let colspan = 1
@@ -73,7 +73,7 @@ function isSeparatorRow(line) {
 function isHeadingRow(tr) {
   if (!tr || !tr.parentNode) return false
   
-  var parentNode = tr.parentNode
+  const parentNode = tr.parentNode
   
   // Check if parent is THEAD
   if (parentNode.nodeName === 'THEAD') return true
@@ -83,14 +83,14 @@ function isHeadingRow(tr) {
       (parentNode.nodeName === 'TABLE' || parentNode.nodeName === 'TBODY')) {
     
     // Check if all child nodes are TH (ignore text nodes)
-    var cellNodes = Array.prototype.filter.call(tr.childNodes, function(n) {
+    const cellNodes = Array.prototype.filter.call(tr.childNodes, function(n) {
       return n.nodeType === 1 // Element nodes only
     })
     
     if (cellNodes.length === 0) return false
     
-    return Array.prototype.every.call(cellNodes, function (n) { 
-      return n.nodeName === 'TH' 
+    return Array.prototype.every.call(cellNodes, function (n) {
+      return n.nodeName === 'TH'
     })
   }
   
@@ -167,7 +167,7 @@ rules.tableRow = {
     // Skip empty rows
     if (!content || !content.trim()) return ''
     
-    var borderCells = ''
+    let borderCells = ''
     
     // Add separator row for heading
     if (isHeadingRow(node)) {
@@ -176,7 +176,7 @@ rules.tableRow = {
         const colCount = getTableColCount(table)
         
         if (colCount > 0) {
-          for (var i = 0; i < colCount; i++) {
+          for (let i = 0; i < colCount; i++) {
             const prefix = i === 0 ? '| ' : ' '
             borderCells += prefix + '---' + ' |'
           }
@@ -253,7 +253,7 @@ rules.tableColgroup = {
 }
 
 export default function tables(turndownService) {
-  for (var key in rules) {
+  for (const key of Object.keys(rules)) {
     turndownService.addRule(key, rules[key])
   }
 }
