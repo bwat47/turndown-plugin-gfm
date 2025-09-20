@@ -55,7 +55,7 @@ export declare const highlightedCodeBlock: TurndownPlugin;
  * @example
  * ```typescript
  * import TurndownService from 'turndown';
- * import { gfm } from '@truto/turndown-plugin-gfm';
+ * import { gfm } from '@bwat47/turndown-plugin-gfm';
  * 
  * const turndownService = new TurndownService();
  * turndownService.use(gfm);
