@@ -1,9 +1,9 @@
 {
-  "name": "@truto/turndown-plugin-gfm",
+  "name": "@bwat47/turndown-plugin-gfm",
   "description": "Enhanced Turndown plugin for GitHub Flavored Markdown with improved table conversion and performance.",
   "version": "1.0.2",
   "type": "module",
-  "author": "Truto <eng@truto.one>",
+  "author": "bwat47",
   "main": "./lib/index.js",
   "module": "./lib/index.js",
   "exports": {
@@ -33,7 +33,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/trutohq/turndown-plugin-gfm.git"
+    "url": "https://github.com/bwat47/turndown-plugin-gfm.git"
   },
   "engines": {
     "node": ">=18.0.0"
