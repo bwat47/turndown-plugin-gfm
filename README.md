@@ -7,6 +7,7 @@
 This is a fork of @truto/turndown-plugin-gfm with some minor changes:
 
 - Fixed table conversion issue related to header separator detection.
+- Fixed table conversion issue where cell content could be over-escaped.
 - Updated eslint config and fixed lint errors.
 
 ## 📦 Installation
