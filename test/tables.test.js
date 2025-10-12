@@ -78,7 +78,22 @@ describe('Tables Plugin', () => {
       const html = '<table><tr><th>Column</th></tr><tr><td>A | B | C</td></tr></table>'
       const result = turndownService.turndown(html)
       
-      expect(result).toContain('A \\\\| B \\\\| C')
+      expect(result).toMatch(/A \\\| B \\\| C/)
+    })
+
+    it('should not double escape hyphen-only cells', () => {
+      const html = `
+        <table>
+          <tr><th>Region</th><th>Status</th></tr>
+          <tr><td>North America</td><td>-</td></tr>
+          <tr><td>Europe</td><td>-</td></tr>
+        </table>
+      `
+      
+      const result = turndownService.turndown(html)
+      
+      expect(result).toMatch(/\|\s*\\-\s*\|/)
+      expect(result).not.toMatch(/\\\\\\\\-/)
     })
 
     it('should handle line breaks in cells', () => {
@@ -267,8 +282,8 @@ describe('Tables Plugin', () => {
       const result = turndownService.turndown(html)
       
       expect(result).toContain('Table with Special Characters Test')
-      expect(result).toContain('A \\\\| B \\\\| C') // Pipes escaped
-      expect(result).toContain('C:\\\\\\\\Users') // Backslashes escaped
+      expect(result).toMatch(/A \\\| B \\\| C/) // Pipes escaped
+      expect(result).toContain('C:\\\\Users') // Backslashes escaped
       expect(result).not.toContain('<table')
     })
 

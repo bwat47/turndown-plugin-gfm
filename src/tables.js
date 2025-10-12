@@ -1,5 +1,36 @@
 const rules = {}
 
+// Escape pipe characters that are not already escaped while preserving existing Markdown escapes.
+function escapeUnescapedPipes(value) {
+  let result = ''
+  let backslashRunLength = 0
+
+  for (let i = 0; i < value.length; i++) {
+    const char = value[i]
+
+    if (char === '\\') {
+      result += char
+      backslashRunLength += 1
+      continue
+    }
+
+    if (char === '|') {
+      // Even number of backslashes (including 0) means the pipe is not escaped
+      if (backslashRunLength % 2 === 0) {
+        result += '\\|'
+      } else {
+        result += char
+      }
+    } else {
+      result += char
+    }
+
+    backslashRunLength = 0
+  }
+
+  return result
+}
+
 // Helper function to safely get text content and clean it
 function cleanCellContent(content) {
   if (!content) return '   ' // Default empty cell content
@@ -8,10 +39,10 @@ function cleanCellContent(content) {
   let cleaned = content
     .trim()
     .replace(/\s+/g, ' ') // Normalize whitespace
-    .replace(/\|/g, '\\|') // Escape pipes
-    .replace(/\\/g, '\\\\') // Escape backslashes
     .replace(/\n+/g, ' ') // Convert newlines to spaces
     .replace(/\r+/g, ' ') // Convert carriage returns to spaces
+
+  cleaned = escapeUnescapedPipes(cleaned)
   
   // If content is still empty or only whitespace, provide default
   if (!cleaned || cleaned.match(/^\s*$/)) {
