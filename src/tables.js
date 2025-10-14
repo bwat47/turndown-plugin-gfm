@@ -152,6 +152,37 @@ function getTableColCount(table) {
   return maxCols
 }
 
+// Check if table is a single-cell table (1 row, 1 cell)
+function isSingleCellTable(table) {
+  if (!table || !table.rows || table.rows.length === 0) return false
+  
+  // Count rows (excluding empty rows)
+  let rowCount = 0
+  let totalCells = 0
+  
+  for (let i = 0; i < table.rows.length; i++) {
+    const row = table.rows[i]
+    if (!row || !row.childNodes) continue
+    
+    let cellsInRow = 0
+    for (let j = 0; j < row.childNodes.length; j++) {
+      const cell = row.childNodes[j]
+      if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
+        const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
+        cellsInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
+      }
+    }
+    
+    if (cellsInRow > 0) {
+      rowCount++
+      totalCells += cellsInRow
+    }
+  }
+  
+  // Return true if it's exactly 1 row with exactly 1 cell
+  return rowCount === 1 && totalCells === 1
+}
+
 // Check if table should be skipped (too simple or malformed)
 function shouldSkipTable(table) {
   if (!table) return true
@@ -222,6 +253,13 @@ rules.tableRow = {
 rules.table = {
   filter: 'table',
   replacement: function (content, node) {
+    // Check if this is a single-cell table (1 row, 1 cell)
+    if (isSingleCellTable(node)) {
+      // Return just the text content without table formatting
+      const textContent = node.textContent || ''
+      return textContent.trim() ? '\n\n' + textContent.trim() + '\n\n' : ''
+    }
+    
     // Check if table should be skipped
     if (shouldSkipTable(node)) {
       return ''

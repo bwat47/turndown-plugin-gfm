@@ -70,8 +70,9 @@ describe('Tables Plugin', () => {
       const html = '<table><tr><td>Single Cell</td></tr></table>'
       const result = turndownService.turndown(html)
       
-      expect(result).toMatch(/\|\s*Single Cell\s*\|/)
-      expect(result).toMatch(/\|\s*---\s*\|/)
+      // Single cell tables should return text content, not a markdown table
+      expect(result.trim()).toBe('Single Cell')
+      expect(result).not.toMatch(/\|/)
     })
 
     it('should escape pipe characters in content', () => {
@@ -207,8 +208,10 @@ describe('Tables Plugin', () => {
       const result = turndownService.turndown(html)
       
       expect(result).toContain('Single Cell Table Test')
-      expect(result).toMatch(/\|\s*Single Cell\s*\|/)
-      expect(result).toMatch(/\|\s*Header Only\s*\|/)
+      // Single cell tables should return text content, not a markdown table
+      expect(result).toContain('Single Cell')
+      expect(result).toContain('Header Only')
+      expect(result).not.toContain('|')
       expect(result).not.toContain('<table')
     })
 
