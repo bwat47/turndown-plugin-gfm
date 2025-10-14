@@ -153,6 +153,8 @@ function getTableColCount(table) {
 }
 
 // Check if table is a single-cell table (1 row, 1 cell)
+// Note: This function is only called once per table (in the table rule),
+// so performance impact is negligible even without caching.
 function isSingleCellTable(table) {
   if (!table || !table.rows || table.rows.length === 0) return false
   
