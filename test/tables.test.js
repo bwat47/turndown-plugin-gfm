@@ -107,7 +107,43 @@ describe('Tables Plugin', () => {
       
       const result = turndownService.turndown(html)
       
-      expect(result).toMatch(/\|\s*John Doe\s*\|/)
+      expect(result).toMatch(/\|\s*John<br>Doe\s*\|/)
+    })
+
+    it('should emit a single <br> per line break for any configured br option', () => {
+      const html = `
+        <table>
+          <tr><th>Name</th></tr>
+          <tr><td>John<br>Doe</td></tr>
+        </table>
+      `
+
+      for (const br of ['  ', '\\', '<br>', '<br />']) {
+        const service = new TurndownService({ br })
+        service.use(tables)
+
+        const result = service.turndown(html)
+
+        expect(result).toMatch(/\|\s*John<br>Doe\s*\|/)
+        expect(result).not.toContain('<br><br>')
+        expect(result).not.toContain('\\<br>')
+      }
+    })
+
+    it('should not delete literal text that matches the br marker', () => {
+      // Literal "<br>" text (escaped in HTML) must survive cell cleaning even
+      // when the configured br marker produces the same character sequence
+      const html = '<table><tr><th>H</th></tr><tr><td><p>&lt;br&gt;</p><p>next</p></td></tr></table>'
+
+      const service = new TurndownService({ br: '<br>' })
+      service.use(tables)
+
+      const result = service.turndown(html)
+
+      expect(result).toContain('next')
+      // The literal <br> text is retained (Turndown does not escape "<" in text,
+      // so it passes through as-is followed by the paragraph break)
+      expect(result).toMatch(/\|\s*<br><br><br>next\s*\|/)
     })
 
     it('should handle empty cells', () => {
@@ -257,9 +293,8 @@ describe('Tables Plugin', () => {
       const result = turndownService.turndown(html)
       
       expect(result).toContain('Table with Line Breaks Test')
-      expect(result).toMatch(/\|\s*John Doe\s*\|/) // Line breaks converted to spaces
-      expect(result).toMatch(/\|\s*Jane Smith\s*\|/)
-      expect(result).not.toContain('<br')
+      expect(result).toMatch(/\|\s*John<br>Doe\s*\|/) // Line breaks converted to <br>
+      expect(result).toMatch(/\|\s*Jane Smith\s*\|/) // Soft-wrapped source text stays a space
       expect(result).not.toContain('<table')
     })
 
@@ -274,7 +309,7 @@ describe('Tables Plugin', () => {
 
       expect(result).toContain('Table with List in Cell Test')
       expect(result).toMatch(/^\|\s*---\s*\|\s*---\s*\|$/m)
-      expect(result).toMatch(/\|\s*- Item one - Item two\s*\|/)
+      expect(result).toMatch(/\|\s*- Item one<br>- Item two\s*\|/)
       expect(result).not.toContain('<table')
     })
 

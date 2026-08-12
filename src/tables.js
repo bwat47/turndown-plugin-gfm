@@ -35,12 +35,13 @@ function escapeUnescapedPipes(value) {
 function cleanCellContent(content) {
   if (!content) return '   ' // Default empty cell content
   
-  // Clean and normalize content
+  // Clean and normalize content. Newlines here only come from block elements
+  // (paragraphs, lists, ...) — BR elements are handled by the tableCellBr rule.
   let cleaned = content
     .trim()
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .replace(/\n+/g, ' ') // Convert newlines to spaces
-    .replace(/\r+/g, ' ') // Convert carriage returns to spaces
+    .replace(/\r\n?/g, '\n') // Normalize carriage returns to newlines
+    .replace(/[ \t]+/g, ' ') // Collapse spaces/tabs
+    .replace(/ ?\n ?/g, '<br>') // Convert newlines to <br> so cells stay on one line
 
   cleaned = escapeUnescapedPipes(cleaned)
   
@@ -216,6 +217,18 @@ function shouldSkipTable(table) {
   if (totalCells === 1 && contentCells === 0) return true
   
   return false
+}
+
+// Line breaks inside cells: emit <br> directly from the BR node (overriding
+// Turndown's built-in br rule) so the output is independent of the configured
+// `br` option and can't collide with literal text resembling a break marker.
+rules.tableCellBr = {
+  filter: function (node) {
+    return node.nodeName === 'BR' && node.closest('td, th') !== null
+  },
+  replacement: function () {
+    return '<br>'
+  }
 }
 
 rules.tableCell = {
