@@ -38,9 +38,9 @@ function cleanCellContent(content) {
   // Clean and normalize content
   let cleaned = content
     .trim()
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .replace(/\n+/g, ' ') // Convert newlines to spaces
-    .replace(/\r+/g, ' ') // Convert carriage returns to spaces
+    .replace(/\r\n?/g, '\n') // Normalize carriage returns to newlines
+    .replace(/[ \t]+/g, ' ') // Collapse spaces/tabs
+    .replace(/ ?\n ?/g, '<br>') // Convert newlines to <br> so line breaks survive in cells
 
   cleaned = escapeUnescapedPipes(cleaned)
   

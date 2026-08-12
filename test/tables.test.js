@@ -107,7 +107,7 @@ describe('Tables Plugin', () => {
       
       const result = turndownService.turndown(html)
       
-      expect(result).toMatch(/\|\s*John Doe\s*\|/)
+      expect(result).toMatch(/\|\s*John<br>Doe\s*\|/)
     })
 
     it('should handle empty cells', () => {
@@ -257,9 +257,8 @@ describe('Tables Plugin', () => {
       const result = turndownService.turndown(html)
       
       expect(result).toContain('Table with Line Breaks Test')
-      expect(result).toMatch(/\|\s*John Doe\s*\|/) // Line breaks converted to spaces
-      expect(result).toMatch(/\|\s*Jane Smith\s*\|/)
-      expect(result).not.toContain('<br')
+      expect(result).toMatch(/\|\s*John<br>Doe\s*\|/) // Line breaks converted to <br>
+      expect(result).toMatch(/\|\s*Jane Smith\s*\|/) // Soft-wrapped source text stays a space
       expect(result).not.toContain('<table')
     })
 
@@ -274,7 +273,7 @@ describe('Tables Plugin', () => {
 
       expect(result).toContain('Table with List in Cell Test')
       expect(result).toMatch(/^\|\s*---\s*\|\s*---\s*\|$/m)
-      expect(result).toMatch(/\|\s*- Item one - Item two\s*\|/)
+      expect(result).toMatch(/\|\s*- Item one<br>- Item two\s*\|/)
       expect(result).not.toContain('<table')
     })
 
