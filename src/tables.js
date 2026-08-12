@@ -32,9 +32,15 @@ function escapeUnescapedPipes(value) {
 }
 
 // Helper function to safely get text content and clean it
-function cleanCellContent(content) {
+function cleanCellContent(content, options) {
   if (!content) return '   ' // Default empty cell content
-  
+
+  // Turndown renders <br> as options.br + '\n'; strip the configured marker so the
+  // newline conversion below emits exactly one <br> per line break, regardless of
+  // the br option (e.g. '  ', '\\' or '<br>'). split/join avoids regex escaping.
+  const brMarker = options && typeof options.br === 'string' ? options.br : '  '
+  if (brMarker) content = content.split(brMarker + '\n').join('\n')
+
   // Clean and normalize content
   let cleaned = content
     .trim()
@@ -58,16 +64,16 @@ function cleanCellContent(content) {
 }
 
 // Enhanced cell replacement with colspan support
-function cell(content, node, index) {
+function cell(content, node, index, options) {
   if (index === null && node && node.parentNode) {
     index = Array.prototype.indexOf.call(node.parentNode.childNodes, node)
   }
   if (index === null) index = 0
-  
+
   let prefix = ' '
   if (index === 0) prefix = '| '
-  
-  const cellContent = cleanCellContent(content)
+
+  const cellContent = cleanCellContent(content, options)
   
   // Handle colspan by adding extra empty cells
   let colspan = 1
@@ -220,8 +226,8 @@ function shouldSkipTable(table) {
 
 rules.tableCell = {
   filter: ['th', 'td'],
-  replacement: function (content, node) {
-    return cell(content, node, null)
+  replacement: function (content, node, options) {
+    return cell(content, node, null, options)
   }
 }
 

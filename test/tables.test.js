@@ -110,6 +110,26 @@ describe('Tables Plugin', () => {
       expect(result).toMatch(/\|\s*John<br>Doe\s*\|/)
     })
 
+    it('should emit a single <br> per line break for any configured br option', () => {
+      const html = `
+        <table>
+          <tr><th>Name</th></tr>
+          <tr><td>John<br>Doe</td></tr>
+        </table>
+      `
+
+      for (const br of ['  ', '\\', '<br>', '<br />']) {
+        const service = new TurndownService({ br })
+        service.use(tables)
+
+        const result = service.turndown(html)
+
+        expect(result).toMatch(/\|\s*John<br>Doe\s*\|/)
+        expect(result).not.toContain('<br><br>')
+        expect(result).not.toContain('\\<br>')
+      }
+    })
+
     it('should handle empty cells', () => {
       const html = `
         <table>
