@@ -144,8 +144,12 @@ function getTableStats(table) {
 
   if (!table || !table.rows) return stats
 
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i]
+  // Hoist the row list: `table.rows` is a live HTMLCollection that the DOM
+  // implementation rebuilds on every property access, so reading it inside the
+  // loop condition and body makes this traversal quadratic in row count.
+  const rows = table.rows
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
     if (!row || !row.childNodes) continue
 
     let spannedInRow = 0
