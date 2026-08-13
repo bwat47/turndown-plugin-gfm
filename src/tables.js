@@ -129,93 +129,59 @@ function isHeadingRow(tr) {
   return false
 }
 
-// Get table column count (handles edge cases)
-function getTableColCount(table) {
-  if (!table || !table.rows) return 0
-  
-  let maxCols = 0
+// Gather per-table facts in a single traversal.
+// Both cell counts are kept because the checks below rely on different
+// semantics: a lone empty <td colspan="2"> must be skipped (one cell element)
+// but is not a single-cell table (two spanned cells).
+function getTableStats(table) {
+  const stats = {
+    cellElements: 0, // raw TD/TH element count (colspan ignored)
+    spannedCells: 0, // colspan-adjusted cell count
+    contentCells: 0, // cells with non-whitespace text content
+    rowsWithCells: 0, // rows containing at least one TD/TH
+    maxCols: 0 // widest row, colspan-adjusted
+  }
+
+  if (!table || !table.rows) return stats
+
   for (let i = 0; i < table.rows.length; i++) {
     const row = table.rows[i]
     if (!row || !row.childNodes) continue
-    
-    let colCount = 0
+
+    let spannedInRow = 0
+
     for (let j = 0; j < row.childNodes.length; j++) {
       const cell = row.childNodes[j]
       if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
         const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
-        colCount += isNaN(colspan) ? 1 : Math.max(1, colspan)
-      }
-    }
-    
-    if (colCount > maxCols) maxCols = colCount
-  }
-  
-  return maxCols
-}
-
-// Check if table is a single-cell table (1 row, 1 cell)
-// Note: This function is only called once per table (in the table rule),
-// so performance impact is negligible even without caching.
-function isSingleCellTable(table) {
-  if (!table || !table.rows || table.rows.length === 0) return false
-  
-  // Count rows (excluding empty rows)
-  let rowCount = 0
-  let totalCells = 0
-  
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i]
-    if (!row || !row.childNodes) continue
-    
-    let cellsInRow = 0
-    for (let j = 0; j < row.childNodes.length; j++) {
-      const cell = row.childNodes[j]
-      if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
-        const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
-        cellsInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
-      }
-    }
-    
-    if (cellsInRow > 0) {
-      rowCount++
-      totalCells += cellsInRow
-    }
-  }
-  
-  // Return true if it's exactly 1 row with exactly 1 cell
-  return rowCount === 1 && totalCells === 1
-}
-
-// Check if table should be skipped (too simple or malformed)
-function shouldSkipTable(table) {
-  if (!table) return true
-  
-  // Skip completely empty tables
-  if (!table.rows || table.rows.length === 0) return true
-  
-  // Count actual content cells
-  let contentCells = 0
-  let totalCells = 0
-  
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i]
-    if (!row || !row.childNodes) continue
-    
-    for (let j = 0; j < row.childNodes.length; j++) {
-      const cell = row.childNodes[j]
-      if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
-        totalCells++
+        stats.cellElements++
+        spannedInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
         if (cell.textContent && cell.textContent.trim()) {
-          contentCells++
+          stats.contentCells++
         }
       }
     }
+
+    if (spannedInRow > 0) {
+      stats.rowsWithCells++
+      stats.spannedCells += spannedInRow
+    }
+    if (spannedInRow > stats.maxCols) stats.maxCols = spannedInRow
   }
-  
-  // Skip if no cells or only one cell with no meaningful content
-  if (totalCells === 0) return true
-  if (totalCells === 1 && contentCells === 0) return true
-  
+
+  return stats
+}
+
+// Check if table is a single-cell table (1 row, 1 cell)
+function isSingleCellTable(stats) {
+  return stats.rowsWithCells === 1 && stats.spannedCells === 1
+}
+
+// Check if table should be skipped (too simple or malformed):
+// no cells at all, or a single cell with no meaningful content
+function shouldSkipTable(stats) {
+  if (stats.cellElements === 0) return true
+  if (stats.cellElements === 1 && stats.contentCells === 0) return true
   return false
 }
 
@@ -250,8 +216,8 @@ rules.tableRow = {
     if (isHeadingRow(node)) {
       const table = node.closest('table')
       if (table) {
-        const colCount = getTableColCount(table)
-        
+        const colCount = getTableStats(table).maxCols
+
         if (colCount > 0) {
           for (let i = 0; i < colCount; i++) {
             const prefix = i === 0 ? '| ' : ' '
@@ -268,15 +234,16 @@ rules.tableRow = {
 rules.table = {
   filter: 'table',
   replacement: function (content, node) {
-    // Check if this is a single-cell table (1 row, 1 cell)
-    if (isSingleCellTable(node)) {
-      // Return just the text content without table formatting
+    const stats = getTableStats(node)
+
+    // Single-cell table (1 row, 1 cell): return just the text content
+    // without table formatting
+    if (isSingleCellTable(stats)) {
       const textContent = node.textContent || ''
       return textContent.trim() ? '\n\n' + textContent.trim() + '\n\n' : ''
     }
-    
-    // Check if table should be skipped
-    if (shouldSkipTable(node)) {
+
+    if (shouldSkipTable(stats)) {
       return ''
     }
     
