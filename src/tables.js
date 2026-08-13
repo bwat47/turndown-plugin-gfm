@@ -1,4 +1,5 @@
 const rules = {}
+const tableAnalysisCache = new WeakMap()
 
 // Escape pipe characters that are not already escaped while preserving existing Markdown escapes.
 function escapeUnescapedPipes(value) {
@@ -58,6 +59,12 @@ function cleanCellContent(content) {
   return cleaned
 }
 
+function getColspan(cell) {
+  if (!cell || !cell.getAttribute) return 1
+  const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
+  return isNaN(colspan) ? 1 : Math.max(1, colspan)
+}
+
 // Enhanced cell replacement with colspan support
 function cell(content, node, index) {
   if (index === null && node && node.parentNode) {
@@ -71,11 +78,7 @@ function cell(content, node, index) {
   const cellContent = cleanCellContent(content)
   
   // Handle colspan by adding extra empty cells
-  let colspan = 1
-  if (node && node.getAttribute) {
-    colspan = parseInt(node.getAttribute('colspan') || '1', 10)
-    if (isNaN(colspan) || colspan < 1) colspan = 1
-  }
+  const colspan = getColspan(node)
   
   let result = prefix + cellContent + ' |'
   
@@ -129,37 +132,14 @@ function isHeadingRow(tr) {
   return false
 }
 
-// Get table column count (handles edge cases)
-function getTableColCount(table) {
-  if (!table || !table.rows) return 0
-  
-  let maxCols = 0
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i]
-    if (!row || !row.childNodes) continue
-    
-    let colCount = 0
-    for (let j = 0; j < row.childNodes.length; j++) {
-      const cell = row.childNodes[j]
-      if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
-        const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
-        colCount += isNaN(colspan) ? 1 : Math.max(1, colspan)
-      }
-    }
-    
-    if (colCount > maxCols) maxCols = colCount
-  }
-  
-  return maxCols
-}
-
 // Collect the table shape once so classification does not repeat DOM traversal.
 function analyzeTable(table) {
   const analysis = {
     nonEmptyRowCount: 0,
     physicalCellCount: 0,
     logicalCellCount: 0,
-    nonEmptyCellCount: 0
+    nonEmptyCellCount: 0,
+    maxColCount: 0
   }
 
   if (!table || !table.rows || table.rows.length === 0) return analysis
@@ -172,10 +152,8 @@ function analyzeTable(table) {
     for (let j = 0; j < row.childNodes.length; j++) {
       const cell = row.childNodes[j]
       if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
-        const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
-
         analysis.physicalCellCount++
-        logicalCellsInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
+        logicalCellsInRow += getColspan(cell)
         if (cell.textContent && cell.textContent.trim()) {
           analysis.nonEmptyCellCount++
         }
@@ -185,9 +163,19 @@ function analyzeTable(table) {
     if (logicalCellsInRow > 0) {
       analysis.nonEmptyRowCount++
       analysis.logicalCellCount += logicalCellsInRow
+      analysis.maxColCount = Math.max(analysis.maxColCount, logicalCellsInRow)
     }
   }
 
+  return analysis
+}
+
+function getTableAnalysis(table) {
+  let analysis = tableAnalysisCache.get(table)
+  if (!analysis) {
+    analysis = analyzeTable(table)
+    tableAnalysisCache.set(table, analysis)
+  }
   return analysis
 }
 
@@ -233,7 +221,7 @@ rules.tableRow = {
     if (isHeadingRow(node)) {
       const table = node.closest('table')
       if (table) {
-        const colCount = getTableColCount(table)
+        const colCount = getTableAnalysis(table).maxColCount
         
         if (colCount > 0) {
           for (let i = 0; i < colCount; i++) {
@@ -251,7 +239,7 @@ rules.tableRow = {
 rules.table = {
   filter: 'table',
   replacement: function (content, node) {
-    const tableAnalysis = analyzeTable(node)
+    const tableAnalysis = getTableAnalysis(node)
 
     // Check if this is a single-cell table (1 row, 1 cell)
     if (isSingleCellTable(tableAnalysis)) {

@@ -207,6 +207,20 @@ describe('Tables Plugin', () => {
       expect(result).toMatch(/\|\s*Contact\s*\|\s{3}\|/)
     })
 
+    it('should size the heading separator for the widest logical row', () => {
+      const html = `
+        <table>
+          <tr><th>Heading</th></tr>
+          <tr><td>First</td><td colspan="2">Second</td></tr>
+        </table>
+      `
+
+      const result = turndownService.turndown(html)
+      const separator = result.split('\n').find(line => line.includes('---'))
+
+      expect((separator.match(/\|/g) || []).length).toBe(4)
+    })
+
     it('should handle malformed HTML gracefully', () => {
       const html = `
         <table>
