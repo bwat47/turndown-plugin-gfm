@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import globals from 'globals'
+import sonarjs from 'eslint-plugin-sonarjs';
 
 const baseLanguageOptions = {
   ecmaVersion: 2022,
@@ -12,6 +13,7 @@ const baseLanguageOptions = {
 export default [
   {
     ...js.configs.recommended,
+    ...sonarjs.configs.recommended,
     languageOptions: {
       ...js.configs.recommended.languageOptions,
       ...baseLanguageOptions,
