@@ -66,6 +66,16 @@ describe('Tables Plugin', () => {
       expect(result.trim()).toBe('')
     })
 
+    it.each([
+      ['an empty row', '<table><tr></tr></table>'],
+      ['one empty cell', '<table><tr><td></td></tr></table>'],
+      ['one empty colspan cell', '<table><tr><td colspan="2"></td></tr></table>']
+    ])('should skip %s', (description, html) => {
+      const result = turndownService.turndown(html)
+
+      expect(result.trim()).toBe('')
+    })
+
     it('should handle single cell tables', () => {
       const html = '<table><tr><td>Single Cell</td></tr></table>'
       const result = turndownService.turndown(html)
@@ -73,6 +83,29 @@ describe('Tables Plugin', () => {
       // Single cell tables should return text content, not a markdown table
       expect(result.trim()).toBe('Single Cell')
       expect(result).not.toMatch(/\|/)
+    })
+
+    it.each(['td', 'th'])('should flatten one populated %s surrounded by empty rows', cellName => {
+      const html = `<table><tr></tr><tr><${cellName}>Single Cell</${cellName}></tr><tr></tr></table>`
+      const result = turndownService.turndown(html)
+
+      expect(result.trim()).toBe('Single Cell')
+      expect(result).not.toContain('|')
+    })
+
+    it('should preserve a table containing multiple empty cells', () => {
+      const html = '<table><tr><td></td><td></td></tr></table>'
+      const result = turndownService.turndown(html)
+
+      expect(result).toContain('| --- | --- |')
+    })
+
+    it('should preserve a populated colspan cell as a multi-column table', () => {
+      const html = '<table><tr><td colspan="2">Value</td></tr></table>'
+      const result = turndownService.turndown(html)
+
+      expect(result).toContain('| Value |   |')
+      expect(result).toContain('| --- | --- |')
     })
 
     it('should escape pipe characters in content', () => {

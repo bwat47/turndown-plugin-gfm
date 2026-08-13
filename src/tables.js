@@ -153,70 +153,53 @@ function getTableColCount(table) {
   return maxCols
 }
 
-// Check if table is a single-cell table (1 row, 1 cell)
-// Note: This function is only called once per table (in the table rule),
-// so performance impact is negligible even without caching.
-function isSingleCellTable(table) {
-  if (!table || !table.rows || table.rows.length === 0) return false
-  
-  // Count rows (excluding empty rows)
-  let rowCount = 0
-  let totalCells = 0
-  
+// Collect the table shape once so classification does not repeat DOM traversal.
+function analyzeTable(table) {
+  const analysis = {
+    nonEmptyRowCount: 0,
+    physicalCellCount: 0,
+    logicalCellCount: 0,
+    nonEmptyCellCount: 0
+  }
+
+  if (!table || !table.rows || table.rows.length === 0) return analysis
+
   for (let i = 0; i < table.rows.length; i++) {
     const row = table.rows[i]
     if (!row || !row.childNodes) continue
-    
-    let cellsInRow = 0
+
+    let logicalCellsInRow = 0
     for (let j = 0; j < row.childNodes.length; j++) {
       const cell = row.childNodes[j]
       if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
         const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
-        cellsInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
-      }
-    }
-    
-    if (cellsInRow > 0) {
-      rowCount++
-      totalCells += cellsInRow
-    }
-  }
-  
-  // Return true if it's exactly 1 row with exactly 1 cell
-  return rowCount === 1 && totalCells === 1
-}
 
-// Check if table should be skipped (too simple or malformed)
-function shouldSkipTable(table) {
-  if (!table) return true
-  
-  // Skip completely empty tables
-  if (!table.rows || table.rows.length === 0) return true
-  
-  // Count actual content cells
-  let contentCells = 0
-  let totalCells = 0
-  
-  for (let i = 0; i < table.rows.length; i++) {
-    const row = table.rows[i]
-    if (!row || !row.childNodes) continue
-    
-    for (let j = 0; j < row.childNodes.length; j++) {
-      const cell = row.childNodes[j]
-      if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
-        totalCells++
+        analysis.physicalCellCount++
+        logicalCellsInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
         if (cell.textContent && cell.textContent.trim()) {
-          contentCells++
+          analysis.nonEmptyCellCount++
         }
       }
     }
+
+    if (logicalCellsInRow > 0) {
+      analysis.nonEmptyRowCount++
+      analysis.logicalCellCount += logicalCellsInRow
+    }
   }
-  
-  // Skip if no cells or only one cell with no meaningful content
-  if (totalCells === 0) return true
-  if (totalCells === 1 && contentCells === 0) return true
-  
-  return false
+
+  return analysis
+}
+
+// Check if table is a single-cell table (1 non-empty row, 1 logical cell).
+function isSingleCellTable(analysis) {
+  return analysis.nonEmptyRowCount === 1 && analysis.logicalCellCount === 1
+}
+
+// Check if table should be skipped (too simple or malformed).
+function shouldSkipTable(analysis) {
+  return analysis.physicalCellCount === 0 ||
+    (analysis.physicalCellCount === 1 && analysis.nonEmptyCellCount === 0)
 }
 
 // Line breaks inside cells: emit <br> directly from the BR node (overriding
@@ -268,15 +251,17 @@ rules.tableRow = {
 rules.table = {
   filter: 'table',
   replacement: function (content, node) {
+    const tableAnalysis = analyzeTable(node)
+
     // Check if this is a single-cell table (1 row, 1 cell)
-    if (isSingleCellTable(node)) {
+    if (isSingleCellTable(tableAnalysis)) {
       // Return just the text content without table formatting
       const textContent = node.textContent || ''
       return textContent.trim() ? '\n\n' + textContent.trim() + '\n\n' : ''
     }
     
     // Check if table should be skipped
-    if (shouldSkipTable(node)) {
+    if (shouldSkipTable(tableAnalysis)) {
       return ''
     }
     
