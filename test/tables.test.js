@@ -75,6 +75,26 @@ describe('Tables Plugin', () => {
       expect(result).not.toMatch(/\|/)
     })
 
+    it('should skip a table whose only cell is empty, even with colspan', () => {
+      // getTableStats counts this as one cell element with no content, so the
+      // table is dropped entirely rather than rendered as empty columns.
+      const html = '<table><tr><td colspan="2"></td></tr></table>'
+      const result = turndownService.turndown(html)
+
+      expect(result.trim()).toBe('')
+    })
+
+    it('should not treat a lone spanning cell as a single cell table', () => {
+      // Counterpart to the case above: the same lone cell with content spans
+      // two columns, so it stays a markdown table instead of collapsing to
+      // bare text the way <td>Single Cell</td> does.
+      const html = '<table><tr><td colspan="2">Spanning</td></tr></table>'
+      const result = turndownService.turndown(html)
+
+      expect(result).toMatch(/\|\s*Spanning\s*\|\s{3}\|/)
+      expect(result).toMatch(/\|\s*---\s*\|\s*---\s*\|/)
+    })
+
     it('should escape pipe characters in content', () => {
       const html = '<table><tr><th>Column</th></tr><tr><td>A | B | C</td></tr></table>'
       const result = turndownService.turndown(html)
