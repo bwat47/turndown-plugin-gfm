@@ -1,4 +1,6 @@
 const rules = {}
+// Turndown converts an isolated DOM and does not structurally mutate it during
+// traversal, so a table's cached shape cannot become stale within a conversion.
 const tableAnalysisCache = new WeakMap()
 
 // Escape pipe characters that are not already escaped while preserving existing Markdown escapes.
@@ -142,7 +144,7 @@ function analyzeTable(table) {
     maxColCount: 0
   }
 
-  if (!table || !table.rows || table.rows.length === 0) return analysis
+  if (!table.rows || table.rows.length === 0) return analysis
 
   for (let i = 0; i < table.rows.length; i++) {
     const row = table.rows[i]
@@ -186,6 +188,8 @@ function isSingleCellTable(analysis) {
 
 // Check if table should be skipped (too simple or malformed).
 function shouldSkipTable(analysis) {
+  // Physical count skips one empty colspan cell; isSingleCellTable uses logical
+  // count so a populated colspan remains a multi-column table.
   return analysis.physicalCellCount === 0 ||
     (analysis.physicalCellCount === 1 && analysis.nonEmptyCellCount === 0)
 }
