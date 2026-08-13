@@ -135,7 +135,7 @@ function isHeadingRow(tr) {
 // Collect the table shape once so classification does not repeat DOM traversal.
 function analyzeTable(table) {
   const analysis = {
-    nonEmptyRowCount: 0,
+    rowsWithCellsCount: 0,
     physicalCellCount: 0,
     logicalCellCount: 0,
     nonEmptyCellCount: 0,
@@ -161,7 +161,7 @@ function analyzeTable(table) {
     }
 
     if (logicalCellsInRow > 0) {
-      analysis.nonEmptyRowCount++
+      analysis.rowsWithCellsCount++
       analysis.logicalCellCount += logicalCellsInRow
       analysis.maxColCount = Math.max(analysis.maxColCount, logicalCellsInRow)
     }
@@ -179,9 +179,9 @@ function getTableAnalysis(table) {
   return analysis
 }
 
-// Check if table is a single-cell table (1 non-empty row, 1 logical cell).
+// Check if table is a single-cell table (1 row containing cells, 1 logical cell).
 function isSingleCellTable(analysis) {
-  return analysis.nonEmptyRowCount === 1 && analysis.logicalCellCount === 1
+  return analysis.rowsWithCellsCount === 1 && analysis.logicalCellCount === 1
 }
 
 // Check if table should be skipped (too simple or malformed).
@@ -241,7 +241,6 @@ rules.table = {
   replacement: function (content, node) {
     const tableAnalysis = getTableAnalysis(node)
 
-    // Check if this is a single-cell table (1 row, 1 cell)
     if (isSingleCellTable(tableAnalysis)) {
       // Return just the text content without table formatting
       const textContent = node.textContent || ''
