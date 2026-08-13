@@ -4,11 +4,12 @@
 
 ## Fork information
 
-This is a fork of @truto/turndown-plugin-gfm with some minor changes:
+This is a fork of @truto/turndown-plugin-gfm with the following changes:
 
 - Convert multi-line content in table cells to `<br>` instead of flattening.
 - Fixed table conversion issue related to header separator detection.
 - Fixed table conversion issue where cell content could be over-escaped.
+- Performance improvements.
 - Updated eslint config and fixed lint errors.
 
 ## 📦 Installation
