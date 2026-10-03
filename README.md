@@ -4,13 +4,11 @@
 
 ## Fork information
 
-This is a fork of @truto/turndown-plugin-gfm with the following changes:
+This is a fork of [@truto/turndown-plugin-gfm](https://github.com/trutohq/turndown-plugin-gfm) with the following changes:
 
 - Convert multi-line content in table cells to `<br>` instead of flattening.
-- Fixed table conversion issue related to header separator detection.
-- Fixed table conversion issue where cell content could be over-escaped.
+- Fixes for table conversion edge cases.
 - Performance improvements.
-- Updated eslint config and fixed lint errors.
 
 ## 📦 Installation
 
@@ -23,14 +21,16 @@ npm install @bwat47/turndown-plugin-gfm
 ### Basic Usage
 
 ```javascript
-import TurndownService from 'turndown'
-import { gfm } from '@bwat47/turndown-plugin-gfm'
+import TurndownService from "turndown";
+import { gfm } from "@bwat47/turndown-plugin-gfm";
 
-const turndownService = new TurndownService()
-turndownService.use(gfm)
+const turndownService = new TurndownService();
+turndownService.use(gfm);
 
-const markdown = turndownService.turndown('<table><tr><th>Name</th></tr><tr><td>John</td></tr></table>')
-console.log(markdown)
+const markdown = turndownService.turndown(
+  "<table><tr><th>Name</th></tr><tr><td>John</td></tr></table>",
+);
+console.log(markdown);
 // | Name |
 // | --- |
 // | John |
@@ -39,34 +39,39 @@ console.log(markdown)
 ### TypeScript Usage
 
 ```typescript
-import TurndownService from 'turndown'
-import { gfm, TurndownPlugin } from '@bwat47/turndown-plugin-gfm'
+import TurndownService from "turndown";
+import { gfm, TurndownPlugin } from "@bwat47/turndown-plugin-gfm";
 
-const turndownService = new TurndownService()
-turndownService.use(gfm)
+const turndownService = new TurndownService();
+turndownService.use(gfm);
 
 // Type-safe plugin usage
 const customPlugin: TurndownPlugin = (turndownService) => {
   // Your custom plugin logic
-}
+};
 
-turndownService.use([gfm, customPlugin])
+turndownService.use([gfm, customPlugin]);
 ```
 
 ### Individual Plugins
 
 ```javascript
-import TurndownService from 'turndown'
-import { tables, strikethrough, taskListItems, highlightedCodeBlock } from '@bwat47/turndown-plugin-gfm'
+import TurndownService from "turndown";
+import {
+  tables,
+  strikethrough,
+  taskListItems,
+  highlightedCodeBlock,
+} from "@bwat47/turndown-plugin-gfm";
 
-const turndownService = new TurndownService()
+const turndownService = new TurndownService();
 
 // Use only specific plugins
-turndownService.use([tables, strikethrough])
+turndownService.use([tables, strikethrough]);
 
 // Or use them individually
-turndownService.use(tables)
-turndownService.use(taskListItems)
+turndownService.use(tables);
+turndownService.use(taskListItems);
 ```
 
 ### Available Plugins
