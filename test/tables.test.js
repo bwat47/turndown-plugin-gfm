@@ -294,6 +294,21 @@ describe('Tables Plugin', () => {
       expect(result).not.toContain('<table')
     })
 
+    it('should size the separator from the header row when a body row is wider', () => {
+      const htmlPath = join(process.cwd(), 'test', 'wide-body-colspan-table.html')
+      const html = readFileSync(htmlPath, 'utf8')
+
+      const result = turndownService.turndown(html)
+      const lines = result.split('\n')
+      const headerIndex = lines.findIndex(line => /^\|\s*Gear\s*\|/.test(line))
+
+      expect(lines[headerIndex]).toMatch(/^\|\s*Gear\s*\|\s*Type\s*\|\s*Effect\s*\|$/)
+      // GFM requires the delimiter row to match the header's cell count exactly
+      expect(lines[headerIndex + 1]).toBe('| --- | --- | --- |')
+      expect(result).toMatch(/\|\s*Steel Sword\s*\|/)
+      expect(result).not.toContain('<table')
+    })
+
     it('should handle nested content from HTML file', () => {
       const htmlPath = join(process.cwd(), 'test', 'nested-content-table.html')
       const html = readFileSync(htmlPath, 'utf8')

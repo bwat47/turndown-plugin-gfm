@@ -129,6 +129,22 @@ function isHeadingRow(tr) {
   return false
 }
 
+// Colspan of a TD/TH element, clamped to at least 1
+function colspanOf(cell) {
+  const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
+  return isNaN(colspan) ? 1 : Math.max(1, colspan)
+}
+
+// Colspan-adjusted cell count of a single row
+function rowColumnCount(tr) {
+  let count = 0
+  for (let i = 0; i < tr.childNodes.length; i++) {
+    const n = tr.childNodes[i]
+    if (n.nodeName === 'TD' || n.nodeName === 'TH') count += colspanOf(n)
+  }
+  return count
+}
+
 // Gather per-table facts in a single traversal.
 // Both cell counts are kept because the checks below rely on different
 // semantics: a lone empty <td colspan="2"> must be skipped (one cell element)
@@ -138,8 +154,7 @@ function getTableStats(table) {
     cellElements: 0, // raw TD/TH element count (colspan ignored)
     spannedCells: 0, // colspan-adjusted cell count
     contentCells: 0, // cells with non-whitespace text content
-    rowsWithCells: 0, // rows containing at least one TD/TH
-    maxCols: 0 // widest row, colspan-adjusted
+    rowsWithCells: 0 // rows containing at least one TD/TH
   }
 
   if (!table || !table.rows) return stats
@@ -157,9 +172,8 @@ function getTableStats(table) {
     for (let j = 0; j < row.childNodes.length; j++) {
       const cell = row.childNodes[j]
       if (cell.nodeType === 1 && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
-        const colspan = parseInt(cell.getAttribute('colspan') || '1', 10)
         stats.cellElements++
-        spannedInRow += isNaN(colspan) ? 1 : Math.max(1, colspan)
+        spannedInRow += colspanOf(cell)
         if (cell.textContent && cell.textContent.trim()) {
           stats.contentCells++
         }
@@ -170,7 +184,6 @@ function getTableStats(table) {
       stats.rowsWithCells++
       stats.spannedCells += spannedInRow
     }
-    if (spannedInRow > stats.maxCols) stats.maxCols = spannedInRow
   }
 
   return stats
@@ -216,18 +229,14 @@ rules.tableRow = {
     
     let borderCells = ''
     
-    // Add separator row for heading
+    // Add separator row for heading. GFM requires the delimiter row to match
+    // the header row's cell count exactly, so size it from this row rather than
+    // the widest row in the table (body rows may be wider or narrower).
     if (isHeadingRow(node)) {
-      const table = node.closest('table')
-      if (table) {
-        const colCount = getTableStats(table).maxCols
-
-        if (colCount > 0) {
-          for (let i = 0; i < colCount; i++) {
-            const prefix = i === 0 ? '| ' : ' '
-            borderCells += prefix + '---' + ' |'
-          }
-        }
+      const colCount = rowColumnCount(node)
+      for (let i = 0; i < colCount; i++) {
+        const prefix = i === 0 ? '| ' : ' '
+        borderCells += prefix + '---' + ' |'
       }
     }
     
